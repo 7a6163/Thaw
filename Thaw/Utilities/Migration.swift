@@ -248,7 +248,7 @@ extension MigrationManager {
             let alert = NSAlert()
             alert.messageText = """
                 Due to a bug in a previous version of the app, the data for \
-                \(Bundle.main.displayName)’s menu bar sections was corrupted and had to be reset.
+                \(Constants.displayName)’s menu bar sections was corrupted and had to be reset.
                 """
 
             return .successButShowAlert(alert)

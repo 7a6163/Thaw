@@ -37,7 +37,7 @@ struct HotkeysSettingsPane: View {
                 case .searchMenuBarItems:
                     Text("Search menu bar items")
                 case .enableIceBar:
-                    Text("Enable the \(Bundle.main.displayName) Bar")
+                    Text("Enable the \(Constants.displayName) Bar")
                 case .toggleApplicationMenus:
                     Text("Toggle application menus")
                 }

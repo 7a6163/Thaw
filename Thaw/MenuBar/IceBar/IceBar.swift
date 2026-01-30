@@ -30,7 +30,7 @@ final class IceBarPanel: NSPanel {
             backing: .buffered,
             defer: false
         )
-        self.title = "\(Bundle.main.displayName) Bar"
+        self.title = "\(Constants.displayName) Bar"
         self.titlebarAppearsTransparent = true
         self.isMovableByWindowBackground = true
         self.allowsToolTipsWhenApplicationIsInactive = true
@@ -176,7 +176,7 @@ final class IceBarPanel: NSPanel {
         do {
             try await cacheTask.value
         } catch {
-            Logger.default.error("Cache update failed when showing \(Bundle.main.displayName)BarPanel - \(error)")
+            Logger.default.error("Cache update failed when showing \(Constants.displayName)BarPanel - \(error)")
         }
 
         contentView = IceBarHostingView(
@@ -347,7 +347,7 @@ private struct IceBarContentView: View {
     private var content: some View {
         if !ScreenCapture.cachedCheckPermissions() {
             HStack {
-                Text("The \(Bundle.main.displayName) Bar requires screen recording permissions.")
+                Text("The \(Constants.displayName) Bar requires screen recording permissions.")
 
                 Button {
                     menuBarManager.section(withName: section)?.hide()
@@ -355,14 +355,14 @@ private struct IceBarContentView: View {
                     appState.activate(withPolicy: .regular)
                     appState.openWindow(.settings)
                 } label: {
-                    Text("Open \(Bundle.main.displayName) Settings")
+                    Text("Open \(Constants.displayName) Settings")
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(.link)
             }
             .padding(.horizontal, 10)
         } else if menuBarManager.isMenuBarHiddenBySystemUserDefaults {
-            Text("\(Bundle.main.displayName) cannot display menu bar items for automatically hidden menu bars")
+            Text("\(Constants.displayName) cannot display menu bar items for automatically hidden menu bars")
                 .padding(.horizontal, 10)
         } else if itemManager.itemCache.managedItems.isEmpty {
             HStack {

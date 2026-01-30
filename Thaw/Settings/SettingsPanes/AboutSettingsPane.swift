@@ -82,7 +82,7 @@ struct AboutSettingsPane: View {
                 }
 
                 VStack(alignment: .leading) {
-                    Text("\(Bundle.main.displayName)")
+                    Text("\(Constants.displayName)")
                         .font(.system(size: 80))
                         .foregroundStyle(.primary)
 
@@ -156,7 +156,7 @@ struct AboutSettingsPane: View {
 
     private func bottomBar(containerShape: some InsettableShape) -> some View {
         HStack {
-            Button("Quit \(Bundle.main.displayName)") {
+            Button("Quit \(Constants.displayName)") {
                 NSApp.terminate(nil)
             }
             Spacer()
@@ -169,7 +169,7 @@ struct AboutSettingsPane: View {
             Button("Report a Bug") {
                 openURL(issuesURL)
             }
-            Button("Support \(Bundle.main.displayName)", systemImage: "heart.circle.fill") {
+            Button("Support \(Constants.displayName)", systemImage: "heart.circle.fill") {
                 openURL(donateURL)
             }
         }

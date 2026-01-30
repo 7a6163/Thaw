@@ -75,8 +75,8 @@ struct GeneralSettingsPane: View {
 
     @ViewBuilder
     private var showIceIcon: some View {
-        Toggle("Show \(Bundle.main.displayName) icon", isOn: $settings.showIceIcon)
-            .annotation("Click to show hidden menu bar items. Right-click to access \(Bundle.main.displayName)'s settings.")
+        Toggle("Show \(Constants.displayName) icon", isOn: $settings.showIceIcon)
+            .annotation("Click to show hidden menu bar items. Right-click to access \(Constants.displayName)'s settings.")
     }
 
     @ViewBuilder
@@ -182,7 +182,7 @@ struct GeneralSettingsPane: View {
 
     @ViewBuilder
     private var useIceBar: some View {
-        Toggle("Use \(Bundle.main.displayName) Bar", isOn: $settings.useIceBar)
+        Toggle("Use \(Constants.displayName) Bar", isOn: $settings.useIceBar)
             .annotation("Show hidden menu bar items in a separate bar below the menu bar.")
     }
 
@@ -196,11 +196,11 @@ struct GeneralSettingsPane: View {
         .annotation {
             switch settings.iceBarLocation {
             case .dynamic:
-                Text("The \(Bundle.main.displayName) Bar's location changes based on context.")
+                Text("The \(Constants.displayName) Bar's location changes based on context.")
             case .mousePointer:
-                Text("The \(Bundle.main.displayName) Bar is centered below the mouse pointer.")
+                Text("The \(Constants.displayName) Bar is centered below the mouse pointer.")
             case .iceIcon:
-                Text("The \(Bundle.main.displayName) Bar is centered below the \(Bundle.main.displayName) icon.")
+                Text("The \(Constants.displayName) Bar is centered below the \(Constants.displayName) icon.")
             }
         }
     }

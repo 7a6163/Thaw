@@ -47,7 +47,7 @@ struct MenuBarAppearanceEditor: View {
     }
 
     private var cannotEdit: some View {
-        Text("\(Bundle.main.displayName) cannot edit the appearance of automatically hidden menu bars.")
+        Text("\(Constants.displayName) cannot edit the appearance of automatically hidden menu bars.")
             .font(.title3)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
     }

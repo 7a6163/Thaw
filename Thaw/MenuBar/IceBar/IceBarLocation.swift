@@ -23,7 +23,7 @@ enum IceBarLocation: Int, CaseIterable, Identifiable {
         switch self {
         case .dynamic: "Dynamic"
         case .mousePointer: "Mouse pointer"
-        case .iceIcon: "\(Bundle.main.displayName) icon"
+        case .iceIcon: "\(Constants.displayName) icon"
         }
     }
 }

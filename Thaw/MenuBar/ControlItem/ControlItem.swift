@@ -506,7 +506,7 @@ final class ControlItem {
         let menu = NSMenu(title: Bundle.main.displayName)
 
         let settingsItem = NSMenuItem(
-            title: "\(Bundle.main.displayName) Settings…",
+            title: "\(Constants.displayName) Settings…",
             action: #selector(AppDelegate.openSettingsWindow),
             keyEquivalent: ","
         )
@@ -570,7 +570,7 @@ final class ControlItem {
         menu.addItem(.separator())
 
         let quitItem = NSMenuItem(
-            title: "Quit \(Bundle.main.displayName)",
+            title: "Quit \(Constants.displayName)",
             action: #selector(NSApp.terminate),
             keyEquivalent: "q"
         )
