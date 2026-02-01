@@ -43,10 +43,10 @@ struct MenuBarAppearanceEditor: View {
         } else if #available(macOS 26.0, *) {
             mainForm
                 .scrollEdgeEffectStyle(.hard, for: .vertical)
-                .padding(.top, 20)
+                .padding(.top, topPadding)
         } else {
             mainForm
-                .padding(.top, 20)
+                .padding(.top, topPadding)
         }
     }
 
@@ -81,6 +81,10 @@ struct MenuBarAppearanceEditor: View {
                 isInset
             }
         }
+    }
+
+    private var topPadding: CGFloat {
+        location == .panel ? 20 : 0
     }
 
     private var bottomBar: some View {
