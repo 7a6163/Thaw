@@ -213,6 +213,7 @@ final class MenuBarSearchPanel: NSPanel {
         if isVisible, let screen = screen, contentView != nil {
             saveFrameForDisplay(screen)
         }
+        model.searchText = ""
         super.close()
         contentView = nil
         mouseDownMonitor.stop()
