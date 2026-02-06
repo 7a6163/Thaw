@@ -353,6 +353,11 @@ private struct IceBarContentView: View {
                 .foregroundStyle(.link)
             }
             .padding(.horizontal, 10)
+        } else if section == .alwaysHidden && items.isEmpty {
+            HStack {
+                Text("No items in this section")
+            }
+            .padding(.horizontal, 10)
         } else if itemManager.itemCache.managedItems.isEmpty {
             HStack {
                 Text("Loading menu bar items…")
