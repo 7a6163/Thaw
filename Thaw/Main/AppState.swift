@@ -101,6 +101,24 @@ final class AppState: ObservableObject {
         updatesManager.startUpdaterIfNeeded()
     }
 
+    /// Prewarms menu bar item and image caches once at startup to avoid
+    /// initial load delays when showing the Ice Bar.
+    private func prewarmMenuBarCaches() {
+        Task { [weak self] in
+            // Give the system a brief moment to settle display/space info.
+            try? await Task.sleep(for: .milliseconds(300))
+
+            guard let self, self.hasPermission(.screenRecording) else {
+                return
+            }
+
+            let sections = MenuBarSection.Name.allCases
+
+            await self.itemManager.cacheItemsRegardless(skipRecentMoveCheck: true)
+            await self.imageCache.updateCacheWithoutChecks(sections: sections)
+        }
+    }
+
     /// Starts periodic memory monitoring to track all memory usage
     private func startMemoryMonitoring() {
         Task {
@@ -176,6 +194,8 @@ final class AppState: ObservableObject {
                 NSApp.setActivationPolicy(.regular)
                 try? await Task.sleep(for: .milliseconds(50))
                 NSApp.setActivationPolicy(.accessory)
+
+                prewarmMenuBarCaches()
 
                 logger.debug("Finished setting up app state")
             }
