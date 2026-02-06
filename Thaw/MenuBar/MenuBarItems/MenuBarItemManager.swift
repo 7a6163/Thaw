@@ -1766,10 +1766,6 @@ extension MenuBarItemManager {
     ) async -> Bool {
         guard appState != nil else { return false }
 
-        guard !previousWindowIDs.isEmpty else {
-            return false
-        }
-
         // Avoid relocating items already assigned to hidden/always-hidden sections.
         let hiddenTags = Set(itemCache[.hidden].map(\.tag))
         let alwaysHiddenTags = Set(itemCache[.alwaysHidden].map(\.tag))
@@ -1811,8 +1807,8 @@ extension MenuBarItemManager {
         let previousIDs = Set(previousWindowIDs)
         let candidate = leftmostItems.first { item in
             let identifier = "\(item.tag.namespace):\(item.tag.title)"
-            let isNewID = !previousIDs.contains(item.windowID)
             let isNewIdentity = !knownItemIdentifiers.contains(identifier)
+            let isNewID = previousIDs.isEmpty ? isNewIdentity : !previousIDs.contains(item.windowID)
             let notPlacedHidden = !hiddenTags.contains(item.tag) && !alwaysHiddenTags.contains(item.tag)
             let bundle = bundleID(for: item)
             let notPinnedHidden = bundle.map { !pinnedHiddenBundleIDs.contains($0) && !pinnedAlwaysHiddenBundleIDs.contains($0) } ?? true
