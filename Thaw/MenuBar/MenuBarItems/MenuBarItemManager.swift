@@ -48,10 +48,33 @@ actor SimpleSemaphore {
     }
 
     private func cancelWaiter(withID id: UUID) {
-        defer { value += 1 }
-        if let index = waiters.firstIndex(where: { $0.id == id }) {
-            let waiter = waiters.remove(at: index)
-            waiter.continuation.resume(throwing: CancellationError())
+        guard let index = waiters.firstIndex(where: { $0.id == id }) else {
+            // The waiter was already consumed by signal() — don't touch the value.
+            return
+        }
+        value += 1
+        let waiter = waiters.remove(at: index)
+        waiter.continuation.resume(throwing: CancellationError())
+    }
+
+    /// An error that indicates the semaphore wait timed out.
+    struct TimeoutError: Error {}
+
+    /// Waits for, or decrements, the semaphore with a timeout.
+    /// Throws ``CancellationError`` on cancellation or
+    /// ``TimeoutError`` on timeout.
+    func wait(timeout: Duration) async throws {
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            group.addTask {
+                try await self.wait()
+            }
+            group.addTask {
+                try await Task.sleep(for: timeout)
+                throw TimeoutError()
+            }
+            // The first task to finish (or throw) wins.
+            _ = try await group.next()
+            group.cancelAll()
         }
     }
 
@@ -1332,7 +1355,13 @@ extension MenuBarItemManager {
     ///   - item: The menu bar item to move.
     ///   - destination: The destination to move the menu bar item.
     private func postMoveEvents(item: MenuBarItem, destination: MoveDestination) async throws {
-        try await eventSemaphore.wait()
+        do {
+            try await eventSemaphore.wait(timeout: .seconds(5))
+        } catch is SimpleSemaphore.TimeoutError {
+            logger.error("eventSemaphore timed out in postMoveEvents, forcing signal and retrying")
+            await eventSemaphore.signal()
+            throw EventError.cannotComplete
+        }
         defer { Task.detached { [eventSemaphore] in await eventSemaphore.signal() } }
 
         var itemOrigin = try await getCurrentBounds(for: item).origin
@@ -1515,7 +1544,13 @@ extension MenuBarItemManager {
     ///   - item: The menu bar item to click.
     ///   - mouseButton: The mouse button to click the item with.
     private func postClickEvents(item: MenuBarItem, mouseButton: CGMouseButton) async throws {
-        try await eventSemaphore.wait()
+        do {
+            try await eventSemaphore.wait(timeout: .seconds(5))
+        } catch is SimpleSemaphore.TimeoutError {
+            logger.error("eventSemaphore timed out in postClickEvents, forcing signal and retrying")
+            await eventSemaphore.signal()
+            throw EventError.cannotComplete
+        }
         defer { Task.detached { [eventSemaphore] in await eventSemaphore.signal() } }
 
         let clickPoint = try await getCurrentBounds(for: item).center
