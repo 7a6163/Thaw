@@ -56,9 +56,17 @@ final class HotkeyRegistry {
         }
     }
 
+    private final class CallbackContext {
+        weak var registry: HotkeyRegistry?
+        init(_ registry: HotkeyRegistry) {
+            self.registry = registry
+        }
+    }
+
     private let signature = OSType(1_231_250_720) // OSType for Ice
 
     private var eventHandlerRef: EventHandlerRef?
+    private var callbackContext: CallbackContext?
 
     private var registrations = [UInt32: Registration]()
 
@@ -91,7 +99,10 @@ final class HotkeyRegistry {
             else {
                 return OSStatus(eventNotHandledErr)
             }
-            let registry = Unmanaged<HotkeyRegistry>.fromOpaque(userData).takeUnretainedValue()
+            let context = Unmanaged<CallbackContext>.fromOpaque(userData).takeUnretainedValue()
+            guard let registry = context.registry else {
+                return OSStatus(eventNotHandledErr)
+            }
             return registry.performEventHandler(for: event)
         }
 
@@ -100,14 +111,33 @@ final class HotkeyRegistry {
             EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyReleased)),
         ]
 
-        return InstallEventHandler(
+        let context = CallbackContext(self)
+        let retained = Unmanaged.passRetained(context)
+        let status = InstallEventHandler(
             GetEventDispatcherTarget(),
             handler,
             eventTypes.count,
             eventTypes,
-            Unmanaged.passUnretained(self).toOpaque(),
+            retained.toOpaque(),
             &eventHandlerRef
         )
+
+        if status != noErr {
+            retained.release()
+            return status
+        }
+
+        callbackContext = context
+        return status
+    }
+
+    deinit {
+        if let eventHandlerRef {
+            RemoveEventHandler(eventHandlerRef)
+        }
+        if let callbackContext {
+            Unmanaged.passUnretained(callbackContext).release()
+        }
     }
 
     /// Registers the given hotkey for the given event kind and returns the
