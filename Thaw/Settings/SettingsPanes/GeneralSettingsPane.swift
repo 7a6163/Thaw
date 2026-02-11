@@ -157,7 +157,7 @@ struct GeneralSettingsPane: View {
 
     private func iceIconMenuItem(for imageSet: ControlItemImageSet) -> some View {
         Label {
-            Text(imageSet.name.rawValue)
+            Text(imageSet.name.localized)
         } icon: {
             if let nsImage = imageSet.hidden.nsImage(for: appState) {
                 switch imageSet.name {

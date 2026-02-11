@@ -6,6 +6,8 @@
 //  Copyright (Thaw) © 2026 Toni Förster
 //  Licensed under the GNU GPLv3
 
+import SwiftUI
+
 /// A named set of images that are used by control items.
 ///
 /// An image set contains images for a control item in both the hidden and visible states.
@@ -19,6 +21,20 @@ struct ControlItemImageSet: Codable, Hashable, Identifiable {
         case iceCube = "Ice Cube"
         case sunglasses = "Sunglasses"
         case custom = "Custom"
+
+        /// Localized string key representation.
+        var localized: LocalizedStringKey {
+            switch self {
+            case .arrow: "Arrow"
+            case .chevron: "Chevron"
+            case .door: "Door"
+            case .dot: "Dot"
+            case .ellipsis: "Ellipsis"
+            case .iceCube: "Ice Cube"
+            case .sunglasses: "Sunglasses"
+            case .custom: "Custom"
+            }
+        }
     }
 
     let name: Name
