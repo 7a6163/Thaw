@@ -132,6 +132,8 @@ final class MenuBarItemManager: ObservableObject {
     private var knownItemIdentifiers = Set<String>()
     /// Suppresses the next automatic relocation of newly seen leftmost items.
     private var suppressNextNewLeftmostItemRelocation = false
+    /// Suppresses image cache updates during layout reset to prevent stale cache during moves.
+    var isResettingLayout = false
     /// Persisted bundle identifiers explicitly placed in hidden section.
     private var pinnedHiddenBundleIDs = Set<String>()
     /// Persisted bundle identifiers explicitly placed in always-hidden section.
@@ -2717,6 +2719,8 @@ extension MenuBarItemManager {
     /// - Returns: The number of items that failed to move.
     func resetLayoutToFreshState() async throws -> Int {
         MenuBarItemManager.diagLog.info("Resetting menu bar layout to fresh state")
+        isResettingLayout = true
+        defer { isResettingLayout = false }
 
         guard let appState else {
             throw LayoutResetError.missingAppState

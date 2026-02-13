@@ -737,6 +737,14 @@ final class MenuBarItemImageCache: ObservableObject {
                 )
                 return
             }
+
+            // Skip updates during layout reset to prevent stale cache between passes
+            if await appState.itemManager.isResettingLayout {
+                MenuBarItemImageCache.diagLog.debug(
+                    "Skipping item image cache because layout reset is in progress"
+                )
+                return
+            }
         }
 
         MenuBarItemImageCache.diagLog.debug("updateCache: proceeding with cache update for \(sections.count) sections (iceBar=\(isIceBarPresented), search=\(isSearchPresented))")
