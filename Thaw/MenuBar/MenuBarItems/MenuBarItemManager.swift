@@ -1251,9 +1251,9 @@ extension MenuBarItemManager {
         if item.isBentoBox {
             // Bento Boxes (i.e. Control Center groups) generally
             // take a little longer to respond.
-            return .milliseconds(100)
+            return .milliseconds(200)
         }
-        return .milliseconds(50)
+        return .milliseconds(100)
     }
 
     /// Returns the cached timeout for move operations associated
@@ -1270,7 +1270,7 @@ extension MenuBarItemManager {
     private func updateMoveOperationTimeout(_ timeout: Duration, for item: MenuBarItem) {
         let current = getMoveOperationTimeout(for: item)
         let average = (timeout + current) / 2
-        let clamped = average.clamped(min: .milliseconds(25), max: .milliseconds(150))
+        let clamped = average.clamped(min: .milliseconds(25), max: .milliseconds(500))
         moveOperationTimeouts[item.tag] = clamped
     }
 
