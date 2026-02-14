@@ -82,6 +82,9 @@ final class MenuBarItemImageCache: ObservableObject {
     /// Storage for internal observers.
     private var cancellables = Set<AnyCancellable>()
 
+    /// The currently running cache update task, if any.
+    private var currentUpdateTask: Task<Void, Never>?
+
     // MARK: Setup
 
     /// Sets up the cache.
@@ -257,7 +260,8 @@ final class MenuBarItemImageCache: ObservableObject {
                 guard let self else {
                     return
                 }
-                Task {
+                self.currentUpdateTask?.cancel()
+                self.currentUpdateTask = Task {
                     await self.updateCache()
                 }
             }
