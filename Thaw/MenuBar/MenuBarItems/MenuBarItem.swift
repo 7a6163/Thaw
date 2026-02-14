@@ -220,15 +220,8 @@ extension MenuBarItem {
 
     static func getMenuBarItemWindows(on display: CGDirectDisplayID? = nil, option: ListOption) -> [WindowInfo] {
         var bridgingOption: Bridging.MenuBarWindowListOption = .itemsOnly
-        var displayBoundsPredicate: (CGWindowID) -> Bool = { _ in true }
 
-        if let display {
-            bridgingOption.insert(.onScreen)
-            let displayBounds = CGDisplayBounds(display)
-            displayBoundsPredicate = { windowID in
-                Bridging.windowIntersectsDisplayBounds(windowID, displayBounds)
-            }
-        } else if option.contains(.onScreen) {
+        if option.contains(.onScreen) {
             bridgingOption.insert(.onScreen)
         }
         if option.contains(.activeSpace) {
@@ -238,15 +231,23 @@ extension MenuBarItem {
         let rawWindowIDs = Bridging.getMenuBarWindowList(option: bridgingOption)
         diagLog.debug("getMenuBarItemWindows: Bridging returned \(rawWindowIDs.count) window IDs (display=\(display.map { "\($0)" } ?? "nil"))")
 
+        let displayBounds = display.map { CGDisplayBounds($0) }
+
         let windows = rawWindowIDs.reversed().compactMap { windowID -> WindowInfo? in
-            guard displayBoundsPredicate(windowID) else {
-                diagLog.debug("getMenuBarItemWindows: windowID \(windowID) filtered by display bounds")
-                return nil
-            }
             guard let window = WindowInfo(windowID: windowID) else {
                 diagLog.warning("getMenuBarItemWindows: WindowInfo init failed for windowID \(windowID)")
                 return nil
             }
+
+            if let displayBounds {
+                // Hidden items are pushed far off-screen horizontally, but they maintain
+                // their vertical (Y) coordinate. Filter by the display's Y range.
+                let midY = window.bounds.midY
+                guard midY >= displayBounds.minY, midY <= displayBounds.maxY else {
+                    return nil
+                }
+            }
+
             return window
         }
 
@@ -262,20 +263,35 @@ extension MenuBarItem {
         let windows = getMenuBarItemWindows(on: display, option: option)
         diagLog.debug("getMenuBarItemsExperimental: processing \(windows.count) windows for source PID resolution")
 
-        var items = [MenuBarItem]()
-        var nilPIDCount = 0
-        for window in windows {
-            let sourcePID = await MenuBarItemService.Connection.shared.sourcePID(for: window)
-            if sourcePID == nil {
-                nilPIDCount += 1
-                diagLog.debug("getMenuBarItemsExperimental: nil sourcePID for windowID=\(window.windowID) title=\(window.title ?? "nil") ownerPID=\(window.ownerPID)")
-            }
-            let item = MenuBarItem(uncheckedItemWindow: window, sourcePID: sourcePID)
-            items.append(item)
-        }
+        return await withTaskGroup(of: (Int, MenuBarItem).self) { group in
+            for (index, window) in windows.enumerated() {
+                group.addTask {
+                    // Check for our own control items by title and owner.
+                    // On macOS 26, these are owned by Control Center.
+                    if let title = window.title, title.hasPrefix("Thaw.ControlItem.") {
+                        let ccBundleID = "com.apple.controlcenter"
+                        if window.owningApplication?.bundleIdentifier == ccBundleID ||
+                            window.ownerPID == ProcessInfo.processInfo.processIdentifier
+                        {
+                            return (index, await MenuBarItem(uncheckedItemWindow: window, sourcePID: ProcessInfo.processInfo.processIdentifier))
+                        }
+                    }
 
-        diagLog.debug("getMenuBarItemsExperimental: created \(items.count) items (\(nilPIDCount) with nil sourcePID)")
-        return items
+                    let sourcePID = await MenuBarItemService.Connection.shared.sourcePID(for: window)
+                    return (index, await MenuBarItem(uncheckedItemWindow: window, sourcePID: sourcePID))
+                }
+            }
+
+            var indexedItems = [(Int, MenuBarItem)]()
+            for await result in group {
+                indexedItems.append(result)
+            }
+
+            let items = indexedItems.sorted(by: { $0.0 < $1.0 }).map { $0.1 }
+            let nilPIDCount = items.filter { $0.sourcePID == nil }.count
+            diagLog.debug("getMenuBarItemsExperimental: created \(items.count) items (\(nilPIDCount) with nil sourcePID)")
+            return items
+        }
     }
 
     /// Creates and returns a list of menu bar items, defaulting to the
@@ -407,6 +423,18 @@ extension MenuBarItemTag.Namespace {
     @available(macOS 26.0, *)
     @MainActor
     init(uncheckedItemWindow itemWindow: WindowInfo, sourcePID: pid_t?) {
+        // Check for our own control items by title and owner.
+        // On macOS 26, these are owned by Control Center.
+        if let title = itemWindow.title, title.hasPrefix("Thaw.ControlItem.") {
+            let ccBundleID = "com.apple.controlcenter"
+            if itemWindow.owningApplication?.bundleIdentifier == ccBundleID ||
+                itemWindow.ownerPID == ProcessInfo.processInfo.processIdentifier
+            {
+                self = .thaw
+                return
+            }
+        }
+
         // Most apps have a bundle ID, but we should be able to handle apps
         // that don't. We should also be able to handle daemons and helpers,
         // which are more likely not to have a bundle ID.

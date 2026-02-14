@@ -12,7 +12,7 @@ import SwiftUI
 
 /// A panel that contains the menu bar search interface.
 final class MenuBarSearchPanel: NSPanel {
-    private static let diagLog = DiagLog(category: "MenuBarSearchPanel")
+    private static nonisolated let diagLog = DiagLog(category: "MenuBarSearchPanel")
 
     /// The shared app state.
     private weak var appState: AppState?
@@ -91,7 +91,19 @@ final class MenuBarSearchPanel: NSPanel {
         self.collectionBehavior = [
             .fullScreenAuxiliary, .ignoresCycle, .moveToActiveSpace,
         ]
+        // Close panel when it loses key focus (e.g., another app gets focus)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(panelResignedKey),
+            name: NSWindow.didResignKeyNotification,
+            object: self
+        )
         // setFrameAutosaveName("MenuBarSearchPanel") // Manual persistence is used instead.
+    }
+
+    /// Called when the panel loses key focus.
+    @objc private func panelResignedKey(_: Notification) {
+        close()
     }
 
     /// Performs the initial setup of the panel.
@@ -154,6 +166,7 @@ final class MenuBarSearchPanel: NSPanel {
         appState.navigationState.isSearchPresented = true
 
         Task {
+            await appState.itemManager.cacheItemsIfNeeded()
             await appState.imageCache.updateCache()
             appState.imageCache.logCacheStatus("Search panel opened")
 
@@ -277,11 +290,12 @@ private final class MenuBarSearchHostingView: NSHostingView<AnyView> {
     init(
         appState: AppState,
         model: MenuBarSearchModel,
-        displayID _: CGDirectDisplayID,
+        displayID: CGDirectDisplayID,
         panel: MenuBarSearchPanel
     ) {
         super.init(
-            rootView: MenuBarSearchContentView { [weak panel] in panel?.close()
+            rootView: MenuBarSearchContentView(displayID: displayID) { [weak panel] in
+                panel?.close()
             }
             .environmentObject(appState)
             .environmentObject(appState.itemManager)
@@ -309,6 +323,7 @@ private struct MenuBarSearchContentView: View {
     @EnvironmentObject var model: MenuBarSearchModel
     @FocusState private var searchFieldIsFocused: Bool
 
+    let displayID: CGDirectDisplayID
     let closePanel: () -> Void
 
     private var hasItems: Bool {
@@ -448,6 +463,9 @@ private struct MenuBarSearchContentView: View {
                 for item in itemManager.itemCache.managedItems(for: name)
                     .reversed()
                 {
+                    guard !item.isControlItem else {
+                        continue
+                    }
                     let listItem = ListItem.item(id: .item(item.tag)) {
                         performAction(for: item)
                     } content: {
@@ -499,7 +517,8 @@ private struct MenuBarSearchContentView: View {
             } else {
                 await itemManager.temporarilyShow(
                     item: item,
-                    clickingWith: .left
+                    clickingWith: .left,
+                    on: displayID
                 )
             }
         }

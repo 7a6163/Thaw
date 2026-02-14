@@ -96,9 +96,8 @@ extension MenuBarItemService {
                 self.diagLog = diagLog
             }
 
-            private func getOrCreateSession() throws -> XPCSession {
+            func getSession() throws -> XPCSession {
                 if let session {
-                    diagLog.debug("getOrCreateSession: reusing existing XPC session")
                     return session
                 }
                 diagLog.debug("getOrCreateSession: creating new XPC session for service '\(self.name)'")
@@ -122,17 +121,6 @@ extension MenuBarItemService {
                     return
                 }
                 session.cancel(reason: reason)
-            }
-
-            func send(request: Request) -> Response? {
-                do {
-                    let session = try getOrCreateSession()
-                    let reply = try session.sendSync(request)
-                    return try reply.decode(as: Response.self)
-                } catch {
-                    diagLog.error("XPC session send failed for request \(String(describing: request)): \(error)")
-                    return nil
-                }
             }
         }
 
@@ -163,7 +151,21 @@ extension MenuBarItemService {
 
         /// Sends the given request to the service and returns the response.
         func send(request: Request) -> Response? {
-            storage.withLock { $0.send(request: request) }
+            let session: XPCSession
+            do {
+                session = try storage.withLock { try $0.getSession() }
+            } catch {
+                diagLog.error("Failed to get or create XPC session: \(error)")
+                return nil
+            }
+
+            do {
+                let reply = try session.sendSync(request)
+                return try reply.decode(as: Response.self)
+            } catch {
+                diagLog.error("XPC session send failed for request \(String(describing: request)): \(error)")
+                return nil
+            }
         }
     }
 }

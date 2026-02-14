@@ -7,12 +7,12 @@
 //  Licensed under the GNU GPLv3
 
 import Combine
-import OSLog
 import SwiftUI
 
 // MARK: - IceBarPanel
 
 final class IceBarPanel: NSPanel {
+    private let diagLog = DiagLog(category: "IceBarPanel")
     /// The shared app state.
     private weak var appState: AppState?
 
@@ -143,6 +143,9 @@ final class IceBarPanel: NSPanel {
             return
         }
 
+        // Rehide any temporarily shown items as soon as the IceBar opens.
+        await appState.itemManager.rehideTemporarilyShownItems(force: true)
+
         // IMPORTANT: We must set the navigation state and current section
         // before updating the caches.
         appState.navigationState.isIceBarPresented = true
@@ -156,7 +159,7 @@ final class IceBarPanel: NSPanel {
         do {
             try await cacheTask.value
         } catch {
-            Logger.default.error("Cache update failed when showing \(Constants.displayName)BarPanel - \(error)")
+            diagLog.error("Cache update failed when showing \(Constants.displayName)BarPanel - \(error)")
         }
 
         contentView = IceBarHostingView(
@@ -191,9 +194,6 @@ final class IceBarPanel: NSPanel {
     }
 
     override func close() {
-        if let appState, let section = currentSection {
-            appState.imageCache.clearImages(for: section)
-        }
         super.close()
         contentView = nil
         currentSection = nil
@@ -405,6 +405,7 @@ private struct IceBarContentView: View {
                             menuBarManager: menuBarManager,
                             item: item,
                             section: section,
+                            displayID: screen.displayID,
                             maxHeight: itemMaxHeight
                         )
                     }
@@ -431,6 +432,7 @@ private struct IceBarItemView: View {
 
     let item: MenuBarItem
     let section: MenuBarSection.Name
+    let displayID: CGDirectDisplayID
     let maxHeight: CGFloat?
 
     private var leftClickAction: () -> Void {
@@ -444,7 +446,7 @@ private struct IceBarItemView: View {
                 if Bridging.isWindowOnScreen(item.windowID) {
                     try await itemManager.click(item: item, with: .left)
                 } else {
-                    await itemManager.temporarilyShow(item: item, clickingWith: .left)
+                    await itemManager.temporarilyShow(item: item, clickingWith: .left, on: displayID)
                 }
             }
         }
@@ -461,7 +463,7 @@ private struct IceBarItemView: View {
                 if Bridging.isWindowOnScreen(item.windowID) {
                     try await itemManager.click(item: item, with: .right)
                 } else {
-                    await itemManager.temporarilyShow(item: item, clickingWith: .right)
+                    await itemManager.temporarilyShow(item: item, clickingWith: .right, on: displayID)
                 }
             }
         }

@@ -27,10 +27,13 @@ final class MenuBarManager: ObservableObject {
     /// A Boolean value that indicates whether the "ShowOnHover" feature is allowed.
     @Published var showOnHoverAllowed = true
 
+    /// Timestamp of the last time a section was shown.
+    private(set) var lastShowTimestamp: ContinuousClock.Instant?
+
     /// Reference to the settings window.
     @Published private var settingsWindow: NSWindow?
 
-    /// Logger for the menu bar manager.
+    /// Diagnostic logger for the menu bar manager.
     private let diagLog = DiagLog(category: "MenuBarManager")
 
     /// The shared app state.
@@ -130,6 +133,14 @@ final class MenuBarManager: ObservableObject {
                             // Add delay for smart strategy to allow app focus to settle
                             let delay: TimeInterval = appState.settings.general.rehideStrategy == .smart ? 0.25 : 0.1
                             try await Task.sleep(for: .seconds(delay))
+
+                            // Ignore rehide requests for a short grace period after showing.
+                            if let lastShow = self.lastShowTimestamp,
+                               lastShow.duration(to: .now) < .milliseconds(500)
+                            {
+                                self.diagLog.debug("Skipping rehide due to grace period")
+                                return
+                            }
 
                             // Check if any menu bar item has a menu open (for smart strategy)
                             if appState.settings.general.rehideStrategy == .smart {
@@ -311,6 +322,7 @@ final class MenuBarManager: ObservableObject {
             action: #selector(showAppearanceEditorPanel),
             keyEquivalent: ""
         )
+        editAppearanceItem.image = NSImage(systemSymbolName: "paintbrush", accessibilityDescription: "Edit Appearance")
         editAppearanceItem.target = self
         menu.addItem(editAppearanceItem)
 
@@ -321,6 +333,7 @@ final class MenuBarManager: ObservableObject {
             action: #selector(AppDelegate.openSettingsWindow),
             keyEquivalent: ","
         )
+        settingsItem.image = NSImage(systemSymbolName: "gear", accessibilityDescription: "Settings")
         menu.addItem(settingsItem)
 
         menu.popUp(positioning: nil, at: point, in: nil)
@@ -387,6 +400,11 @@ final class MenuBarManager: ObservableObject {
     /// Dismisses the appearance editor panel if it is shown.
     func dismissAppearanceEditorPanel() {
         appearanceEditorPanel.close()
+    }
+
+    /// Updates the ``lastShowTimestamp`` property.
+    func updateLastShowTimestamp() {
+        lastShowTimestamp = .now
     }
 
     /// Returns the menu bar section with the given name.
