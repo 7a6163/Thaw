@@ -234,32 +234,54 @@ final class MenuBarManager: ObservableObject {
                         let hiddenControlItem = screenItems.first { $0.tag == .hiddenControlItem }
                         let alwaysHiddenControlItem = screenItems.first { $0.tag == .alwaysHiddenControlItem }
 
-                        // Get all items that would be visible when section expands
-                        var sectionItems: [MenuBarItem] = []
+                        // TODO: This section needs to be improved but is okay for now.
+                        
+                        // Get control item bounds and hidden items width
+                        var controlBounds: CGRect = .zero
+                        var hiddenItemsWidth: CGFloat = 0
 
                         if isShowingAlwaysHiddenSection, let ahControl = alwaysHiddenControlItem {
-                            sectionItems = screenItems.filter { item in
-                                (item.bounds.minX >= appMenuFrame.minX && item.bounds.minX <= ahControl.bounds.minX) ||
-                                    item.bounds.minX > ahControl.bounds.maxX
+                            controlBounds = ahControl.bounds
+                            if let appState = self.appState {
+                                hiddenItemsWidth = appState.itemManager.itemCache[.alwaysHidden].reduce(0) { $0 + $1.bounds.width }
                             }
                         } else if isShowingHiddenSection, let hControl = hiddenControlItem {
-                            sectionItems = screenItems.filter { item in
-                                (item.bounds.minX >= appMenuFrame.minX && item.bounds.minX <= hControl.bounds.minX) ||
-                                    item.bounds.minX > hControl.bounds.maxX
+                            controlBounds = hControl.bounds
+                            if let appState = self.appState {
+                                hiddenItemsWidth = appState.itemManager.itemCache[.hidden].reduce(0) { $0 + $1.bounds.width }
                             }
                         }
 
-                        // Filter to only items to the right of app menu
-                        let visibleSectionItems = sectionItems.filter { $0.bounds.minX > appMenuFrame.minX }
+                        // The hidden section expands by replacing control item with hidden items
+                        // New rightmost = where hidden items end = control.minX + hiddenItemsWidth
+                        let newRightmostPos = controlBounds.minX + hiddenItemsWidth
 
-                        // Find the rightmost item
-                        guard let rightmostItem = visibleSectionItems.max(by: { $0.bounds.maxX < $1.bounds.maxX }) else {
-                            return
+                        // Use the actual app menu frame for needed space
+                        let appMenuRightStart = appMenuFrame.maxX
+
+                        // Available space: if app menu extends into notch, add notch width; otherwise use visible frame
+                        let spaceAvailableFromAppMenuEnd: CGFloat
+                        if let notch = screen.frameOfNotch {
+                            // print("DEBUG: notch.minX: \(notch.minX), notch.maxX: \(notch.maxX)")
+                            if appMenuRightStart > notch.minX {
+                                // App menu extends into notch, items get moved past notch
+                                spaceAvailableFromAppMenuEnd = (notch.minX - appMenuRightStart) + (screen.visibleFrame.maxX - notch.maxX)
+                            } else {
+                                // App menu doesn't extend into notch
+                                spaceAvailableFromAppMenuEnd = screen.visibleFrame.maxX - appMenuRightStart
+                            }
+                        } else {
+                            spaceAvailableFromAppMenuEnd = screen.visibleFrame.maxX - appMenuRightStart
                         }
 
-                        // Calculate space needed from app menu end to rightmost item
-                        let spaceNeededFromAppMenuEnd = rightmostItem.bounds.maxX - appMenuFrame.maxX
-                        let spaceAvailableFromAppMenuEnd = screen.frame.maxX - appMenuFrame.maxX
+                        let spaceNeededFromAppMenuEnd = newRightmostPos - appMenuRightStart
+
+                        /*
+                         print("DEBUG: controlBounds: minX=\(controlBounds.minX), width=\(controlBounds.width), hiddenItemsWidth: \(hiddenItemsWidth)")
+                         print("DEBUG: newRightmostPos: \(newRightmostPos)")
+                         print("DEBUG: appMenuRightStart: \(appMenuRightStart), screen visibleFrame maxX: \(screen.visibleFrame.maxX)")
+                         print("DEBUG: spaceNeeded: \(spaceNeededFromAppMenuEnd), spaceAvailable: \(spaceAvailableFromAppMenuEnd)")
+                          */
 
                         // If items would extend past screen edge, hide the app menu
                         if spaceNeededFromAppMenuEnd > spaceAvailableFromAppMenuEnd {
