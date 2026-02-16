@@ -784,6 +784,18 @@
               }
             }
           }
+        },
+        "zh-Hant" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lf 秒"
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -840,6 +852,18 @@
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%lld secondi"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hant" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld 秒"
                 }
               }
             }
