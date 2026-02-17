@@ -38,6 +38,39 @@ To get the latest beta (or stable, whichever is newer):
 brew install thaw@beta
 ```
 
+## Translations
+
+Thaw is currently available in the following languages:
+
+| Language             | Status   | Flag  | Completion                             |
+| :------------------- | :------- | :---: | :------------------------------------- |
+| **English**          | Base     |  🇺🇸   | ![100%](https://geps.dev/progress/100) |
+| **Bahasa Indonesia** | Complete |  🇮🇩   | ![100%](https://geps.dev/progress/100) |
+| **Deutsch**          | Complete |  🇩🇪   | ![100%](https://geps.dev/progress/100) |
+| **Español**          | Complete | 🇪🇸/🇲🇽 | ![100%](https://geps.dev/progress/100) |
+| **Français**         | Complete |  🇫🇷   | ![100%](https://geps.dev/progress/100) |
+| **Italiano**         | Complete |  🇮🇹   | ![100%](https://geps.dev/progress/100) |
+| **Magyar**           | Complete |  🇭🇺   | ![100%](https://geps.dev/progress/100) |
+| **Nederlands**       | Complete |  🇳🇱   | ![100%](https://geps.dev/progress/100) |
+| **Русский(\*)**      | Complete |  🇷🇺   | ![100%](https://geps.dev/progress/100) |
+| **简体中文**         | Complete |  🇨🇳   | ![100%](https://geps.dev/progress/100) |
+| **正體中文**         | Complete |  🇹🇼   | ![100%](https://geps.dev/progress/100) |
+| **한국어**           | Complete |  🇰🇷   | ![100%](https://geps.dev/progress/100) |
+| **ภาษาไทย**          | Complete |  🇹🇭   | ![100%](https://geps.dev/progress/100) |
+
+### Help Translate Thaw
+
+_Note: languages marked with (\*) are currently only available in the development branch._
+
+If you want to help translate Thaw into your language or improve existing ones, you'll need the latest version of Xcode.
+
+1. Open `Thaw.xcodeproj` in Xcode 15 or later.
+2. Navigate to `Thaw -> Resources -> Localizable.xcstrings`.
+3. Add a new language using the **+** button at the bottom or update existing strings.
+4. Submit a Pull Request with your changes!
+
+_Note: You can see the exact completion percentage for each language directly in the Xcode String Catalog editor._
+
 ## Features/Roadmap
 
 <details>
@@ -88,36 +121,6 @@ brew install thaw@beta
 - [ ] Menu bar widgets
 
 </details>
-
-## Translations
-
-Thaw is currently available in the following languages:
-
-| Language             | Status   | Flag  | Completion                             |
-| :------------------- | :------- | :---: | :------------------------------------- |
-| **English**          | Base     |  🇺🇸   | ![100%](https://geps.dev/progress/100) |
-| **Bahasa Indonesia** | Complete |  🇮🇩   | ![100%](https://geps.dev/progress/100) |
-| **Deutsch**          | Complete |  🇩🇪   | ![100%](https://geps.dev/progress/100) |
-| **Español**          | Complete | 🇪🇸/🇲🇽 | ![100%](https://geps.dev/progress/100) |
-| **Français**         | Complete |  🇫🇷   | ![100%](https://geps.dev/progress/100) |
-| **Italiano**         | Complete |  🇮🇹   | ![100%](https://geps.dev/progress/100) |
-| **Magyar**           | Complete |  🇭🇺   | ![100%](https://geps.dev/progress/100) |
-| **Nederlands**       | Complete |  🇳🇱   | ![100%](https://geps.dev/progress/100) |
-| **简体中文**         | Complete |  🇨🇳   | ![100%](https://geps.dev/progress/100) |
-| **正體中文**         | Complete |  🇹🇼   | ![100%](https://geps.dev/progress/100) |
-| **한국어**           | Complete |  🇰🇷   | ![100%](https://geps.dev/progress/100) |
-| **ภาษาไทย**          | Complete |  🇹🇭   | ![100%](https://geps.dev/progress/100) |
-
-### Help Translate Thaw
-
-If you want to help translate Thaw into your language or improve existing ones, you'll need the latest version of Xcode.
-
-1. Open `Thaw.xcodeproj` in Xcode 15 or later.
-2. Navigate to `Thaw -> Resources -> Localizable.xcstrings`.
-3. Add a new language using the **+** button at the bottom or update existing strings.
-4. Submit a Pull Request with your changes!
-
-_Note: You can see the exact completion percentage for each language directly in the Xcode String Catalog editor._
 
 ## Why does Thaw only support macOS 14 and later?
 
