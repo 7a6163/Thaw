@@ -117,12 +117,23 @@ final class LayoutBarItemView: NSView {
         var c = Set<AnyCancellable>()
 
         if let appState {
-            appState.imageCache.$images
-                .sink { [weak self] images in
+            let tag = item.tag
+            let imageForTag = appState.imageCache.$images
+                .map { images -> MenuBarItemImageCache.CapturedImage? in images[tag] }
+
+            imageForTag
+                .removeDuplicates(by: { (old: MenuBarItemImageCache.CapturedImage?, new: MenuBarItemImageCache.CapturedImage?) in
+                    guard let old, let new else { return old == nil && new == nil }
+                    return old.scale == new.scale
+                        && old.cgImage.width == new.cgImage.width
+                        && old.cgImage.height == new.cgImage.height
+                        && old.cgImage.dataProvider?.data == new.cgImage.dataProvider?.data
+                })
+                .sink { [weak self] image in
                     guard let self else {
                         return
                     }
-                    self.cachedImage = images[item.tag]
+                    self.cachedImage = image
                 }
                 .store(in: &c)
         }
