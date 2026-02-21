@@ -8,6 +8,7 @@
 
 import Cocoa
 import Combine
+import os
 
 /// Manager that monitors input events and implements the features
 /// that are triggered by them, such as showing hidden items on
@@ -22,6 +23,9 @@ final class HIDEventManager: ObservableObject {
 
     /// The shared app state.
     private weak var appState: AppState?
+
+    /// Thread-safe counter for mouse-moved event throttling.
+    private nonisolated let mouseMovedThrottleCounter = OSAllocatedUnfairLock(initialState: 0)
 
     /// Storage for internal observers.
     private var cancellables = Set<AnyCancellable>()
@@ -134,11 +138,11 @@ final class HIDEventManager: ObservableObject {
         }
 
         // Throttling: Only process every 5th event to reduce CPU usage.
-        enum Context {
-            static var eventCount = 0
+        let shouldProcess = mouseMovedThrottleCounter.withLock { count -> Bool in
+            count += 1
+            return count % 5 == 0
         }
-        Context.eventCount += 1
-        if Context.eventCount % 5 != 0 {
+        guard shouldProcess else {
             return event
         }
 
