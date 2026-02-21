@@ -41,13 +41,15 @@ struct AdvancedSettingsPane: View {
                 showAllSectionsOnUserDrag
                 sectionDividerStyle
             }
+            IceSection("Tooltips") {
+                showMenuBarTooltips
+                tooltipDelay
+            }
             IceSection("Other") {
                 hideApplicationMenus
                 enableSecondaryContextMenu
                 showIceBarAtMouseLocationOnHotkey
                 showOnHoverDelay
-                tooltipDelay
-                showMenuBarTooltips
             }
             IceSection("Permissions") {
                 allPermissions
