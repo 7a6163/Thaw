@@ -6,7 +6,7 @@
 //  Copyright (Thaw) © 2026 Toni Förster
 //  Licensed under the GNU GPLv3
 
-import Cocoa
+import AppKit
 
 /// Per-display configuration for the Ice Bar.
 struct DisplayIceBarConfiguration: Codable, Equatable {
@@ -33,6 +33,7 @@ struct DisplayIceBarConfiguration: Codable, Equatable {
     }
 
     /// Builds per-display configurations for all connected screens.
+    @MainActor
     static func buildConfigurations(
         onlyOnNotched: Bool,
         location: IceBarLocation
